@@ -1,24 +1,24 @@
 package Task1;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Scanner;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 public class CoworkingSpaceReservationApp {
-    private static List<CoworkingSpace> spaces = new ArrayList<>();
-    private static List<Booking> bookings = new ArrayList<>();
-    private static Scanner scanner = new Scanner(System.in);
-    private static int bookingCounter = 1;
+    static Scanner scanner = new Scanner(System.in);
+    static List<CoworkingSpace> spaces = new ArrayList<>();
+    static List<Reservation> reservations = new ArrayList<>();
+    static int reservationCounter = 1;
 
     public static void main(String[] args) {
         while (true) {
-            System.out.println("\nMain Menu:");
+            System.out.println("Main Menu:");
             System.out.println("1. Admin Login");
             System.out.println("2. User Login");
             System.out.println("3. Exit");
             System.out.print("Choose an option: ");
             int choice = scanner.nextInt();
+            scanner.nextLine();
 
             switch (choice) {
                 case 1:
@@ -28,23 +28,24 @@ public class CoworkingSpaceReservationApp {
                     customerMenu();
                     break;
                 case 3:
-                    System.out.println("Exiting application. Goodbye!");
+                    System.out.println("Exiting application.");
                     return;
                 default:
-                    System.out.println("Invalid option. Please try again.");
+                    System.out.println("Invalid option. Try again.");
             }
         }
     }
 
-    private static void adminMenu() {
+    public static void adminMenu() {
         while (true) {
             System.out.println("\nAdmin Menu:");
             System.out.println("1. Add a new coworking space");
             System.out.println("2. Remove a coworking space");
             System.out.println("3. View all reservations");
-            System.out.println("4. Back to Main Menu");
+            System.out.println("4. Go back to main menu");
             System.out.print("Choose an option: ");
             int choice = scanner.nextInt();
+            scanner.nextLine();
 
             switch (choice) {
                 case 1:
@@ -59,50 +60,22 @@ public class CoworkingSpaceReservationApp {
                 case 4:
                     return;
                 default:
-                    System.out.println("Invalid option. Please try again.");
+                    System.out.println("Invalid option. Try again.");
             }
         }
     }
 
-    private static void addCoworkingSpace() {
-        System.out.print("Enter space ID: ");
-        int id = scanner.nextInt();
-        scanner.nextLine(); // consume newline
-        System.out.print("Enter space type (e.g., open, private, room): ");
-        String type = scanner.nextLine();
-        System.out.print("Enter price: ");
-        double price = scanner.nextDouble();
-        spaces.add(new CoworkingSpace(id, type, price, true));
-        System.out.println("Space added successfully.");
-    }
-
-    private static void removeCoworkingSpace() {
-        System.out.print("Enter space ID to remove: ");
-        int id = scanner.nextInt();
-        spaces.removeIf(space -> space.getId() == id);
-        System.out.println("Space removed successfully.");
-    }
-
-    private static void viewAllReservations() {
-        if (bookings.isEmpty()) {
-            System.out.println("No reservations available.");
-        } else {
-            for (Booking booking : bookings) {
-                System.out.println(booking);
-            }
-        }
-    }
-
-    private static void customerMenu() {
+    public static void customerMenu() {
         while (true) {
             System.out.println("\nCustomer Menu:");
             System.out.println("1. Browse available spaces");
             System.out.println("2. Make a reservation");
             System.out.println("3. View my reservations");
             System.out.println("4. Cancel a reservation");
-            System.out.println("5. Back to Main Menu");
+            System.out.println("5. Go back to main menu");
             System.out.print("Choose an option: ");
             int choice = scanner.nextInt();
+            scanner.nextLine();
 
             switch (choice) {
                 case 1:
@@ -120,73 +93,139 @@ public class CoworkingSpaceReservationApp {
                 case 5:
                     return;
                 default:
-                    System.out.println("Invalid option. Please try again.");
+                    System.out.println("Invalid option. Try again.");
             }
         }
     }
 
-    private static void browseSpaces() {
-        for (CoworkingSpace space : spaces) {
-            System.out.println(space);
+    public static void addCoworkingSpace() {
+        System.out.print("Enter space ID: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("Enter space type (e.g., Open, Private): ");
+        String type = scanner.nextLine();
+        System.out.print("Enter price: ");
+        double price = scanner.nextDouble();
+        scanner.nextLine();
+
+        Map<LocalDate, List<String>> dateTimeSlots = new HashMap<>();
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        System.out.println("Enter available dates (format: yyyy-MM-dd). Type 'done' to finish:");
+        while (true) {
+            String dateInput = scanner.nextLine();
+            if ("done".equalsIgnoreCase(dateInput)) break;
+
+            LocalDate date;
+            try {
+                date = LocalDate.parse(dateInput, dateFormatter);
+            } catch (Exception e) {
+                System.out.println("Invalid date format. Try again.");
+                continue;
+            }
+
+            System.out.println("Enter time slots for " + date + " (e.g., 9:00-11:00). Type 'done' to finish:");
+            List<String> timeSlots = new ArrayList<>();
+            while (true) {
+                String slot = scanner.nextLine();
+                if ("done".equalsIgnoreCase(slot)) break;
+                timeSlots.add(slot);
+            }
+            dateTimeSlots.put(date, timeSlots);
+        }
+
+        spaces.add(new CoworkingSpace(id, type, price, dateTimeSlots));
+        System.out.println("Coworking space added successfully.");
+    }
+
+
+
+    public static void removeCoworkingSpace() {
+        System.out.print("Enter space ID to remove: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        spaces.removeIf(space -> space.id == id);
+        System.out.println("Coworking space removed successfully.");
+    }
+
+    public static void viewAllReservations() {
+        if (reservations.isEmpty()) {
+            System.out.println("No reservations found.");
+        } else {
+            reservations.forEach(System.out::println);
         }
     }
 
-    private static void makeReservation() {
+    public static void browseSpaces() {
+        spaces.stream().filter(space -> space.isAvailable).forEach(System.out::println);
+    }
+
+    public static void makeReservation() {
         System.out.print("Enter your name: ");
-        scanner.nextLine(); // consume newline
         String name = scanner.nextLine();
-        System.out.print("Enter workspace ID to reserve: ");
-        int workspaceId = scanner.nextInt();
-        System.out.print("Enter date (e.g., YYYY-MM-DD): ");
-        scanner.nextLine(); // consume newline
-        String date = scanner.nextLine();
-        System.out.print("Enter time (e.g., 10:00-12:00): ");
-        String time = scanner.nextLine();
+        System.out.print("Enter space ID to reserve: ");
+        int spaceId = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("Enter reservation date (format: yyyy-MM-dd): ");
+        String dateInput = scanner.nextLine();
+
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateInput, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        } catch (Exception e) {
+            System.out.println("Invalid date format. Try again.");
+            return;
+        }
+
+        System.out.print("Enter desired time slot (e.g., 9:00-11:00): ");
+        String timeSlot = scanner.nextLine();
 
         for (CoworkingSpace space : spaces) {
-            if (space.getId() == workspaceId && space.isAvailable()) {
-                space.setAvailable(false);
-                bookings.add(new Booking(bookingCounter++, name, workspaceId, date, time));
-                System.out.println("Reservation successful.");
-                return;
+            if (space.id == spaceId && space.isAvailable && space.availableDateTimeSlots.containsKey(date)) {
+                List<String> timeSlots = space.availableDateTimeSlots.get(date);
+                if (timeSlots.contains(timeSlot)) {
+                    timeSlots.remove(timeSlot);
+                    if (timeSlots.isEmpty()) {
+                        space.availableDateTimeSlots.remove(date);
+                        if (space.availableDateTimeSlots.isEmpty()) {
+                            space.isAvailable = false;
+                        }
+                    }
+                    reservations.add(new Reservation(reservationCounter++, spaceId, name, date.toString(), timeSlot));
+                    System.out.println("Reservation successful.");
+                    return;
+                }
             }
         }
-        System.out.println("Workspace not available or invalid ID.");
+        System.out.println("Invalid ID, date, or time slot unavailable.");
     }
 
-    private static void viewMyReservations() {
+
+
+    public static void viewMyReservations() {
         System.out.print("Enter your name: ");
-        scanner.nextLine(); // consume newline
         String name = scanner.nextLine();
-
-        boolean found = false;
-        for (Booking booking : bookings) {
-            if (booking.toString().contains(name)) {
-                System.out.println(booking);
-                found = true;
-            }
-        }
-
-        if (!found) {
-            System.out.println("No reservations found for your name.");
-        }
+        reservations.stream()
+                .filter(reservation -> reservation.customerName.equalsIgnoreCase(name))
+                .forEach(System.out::println);
     }
 
-    private static void cancelReservation() {
+    public static void cancelReservation() {
         System.out.print("Enter reservation ID to cancel: ");
         int id = scanner.nextInt();
+        scanner.nextLine();
 
-        Iterator<Booking> iterator = bookings.iterator();
+        Iterator<Reservation> iterator = reservations.iterator();
         while (iterator.hasNext()) {
-            Booking booking = iterator.next();
-            if (booking.getId() == id) {
+            Reservation reservation = iterator.next();
+            if (reservation.reservationId == id) {
+                iterator.remove();
                 for (CoworkingSpace space : spaces) {
-                    if (space.getId() == booking.getWorkspaceId()) {
-                        space.setAvailable(true);
+                    if (space.id == reservation.spaceId) {
+                        space.isAvailable = true;
                     }
                 }
-                iterator.remove();
-                System.out.println("Reservation canceled successfully.");
+                System.out.println("Reservation cancelled successfully.");
                 return;
             }
         }
